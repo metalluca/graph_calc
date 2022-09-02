@@ -12,39 +12,49 @@ from sympy.plotting import plot_implicit
 from sympy import Rel
 
 class linear_function():
-    def __init__(self, m, b):
-        self.m = m
-        self.b = b
+    
+    _expr = None
+    m = None
+    b = None
+    kind = None
+    
+    def __init__(self, string):
+        self._expr = string
+    
+    def solve_raw_input(self):
+        
+        x1, x2 = symbols('x1 x2')
+        lhs, rhs = parse_expr(self._expr).args
+        eq = Rel(lhs, rhs, "<=")
+        res = solve(eq, x2)
+        print(res)
+        foo = res.args[1].args[1]
+        c = foo.as_coeff_Add()
+        self.m = float(c[1].args[0])
+        self.b = float(c[0])
+        self.kind = str(type(res.args[1]))
+    
     
     def compute_y(self, x: np.array) -> np.array:
         return self.m*x+self.b
     
-    def plof_lf(self, x):
-        y = self.compute_y(x)
-        plt.plot(x, y, label="y="+str(self.m)+"x"+str(self.b))
+    def plot(self, X: np.array):
+        y = self.compute_y(X)
+        if self.kind == "<class 'sympy.core.relational.GreaterThan'>":
+            y2 = np.min(X)
+        else:
+            y2 = np.max(X)
+        
+        plt.plot(X, y, label="y="+str(self.m)+"x+"+str(self.b))
         plt.fill_between(
-                    x=x,
+                    x=X,
                     y1=y,
-                    y2=np.max(x),
+                    y2=y2,
                     color="red",
                     alpha=0.3,
                     hatch="/"
                 )
-
-def get_params(text: str):
-    # e.g. text: -1*x+3
-    ineqs = ["<", ">", "<=", ">="]
-    kind = ""
-    for s in ineqs:
-        if s in text:
-            kind = s
-            
-    _, right_side = text.split(kind)
-    slope = float(right_side.split("*")[0])
-    intercept = float(right_side.split("x")[1])
     
-    return slope, intercept
-
 def create_fig():
     fig = plt.figure(figsize=(12, 12))
     ax = fig.add_subplot(1, 1, 1)
@@ -65,33 +75,28 @@ def create_fig():
 def main():
     print("--- Welcome to the LP Visualizer ---")
     # zf = input("Enter Zielfunktion (e.g. maximize 3x+4y): ")
-    # expr = input("Enter Nebenbedingung: ")
-    expr = "1*x1 + 4*x2 <= 20"
-    x1, x2 = symbols('x1 x2')
-    # eq = parse_expr(expr)
-    # res = solve(eq, x2)
-    X = np.linspace(-10, 10, 10)
-    x1, x2 = symbols('x1 x2')
-    eq = Rel(1*x1 + 4*x2, 20, "==")
-    res = solve(eq, x2)
-    intercept = res[0].as_coeff_Add()[0]
-    slope = res[0].as_coeff_Add()[1]
-    # nb2 = input("Enter Nebenbedingung 2 solved for y (e.g. y<=-1/2*x+4): ")
-    # nb3 = input("Enter Nebenbedingung 3 solved for y (e.g. y<=-1/2*x+4): ")
-    lf1 = linear_function(intercept, slope)
-    print(lf1.b, lf1.m)
-    print(lf1.compute_y(X))
-    # lf2 = linear_function(*get_params(nb2))
-    # lf3 = linear_function(*get_params(nb3))
+    iq_strs = ["1*x1+2*x2 <= 2", "-1*x1-1*x2 <= 0", "-1*x1+2*x2 <= -6" ]
+    
+    # for i in range(3):
+    #     iq_strs.append(input("Enter Nebenbedingung: "))
     
     ax, fig = create_fig()
-    # lf1.plof_lf(X)
+    X = np.linspace(-10, 10, 10)
+    for iq_str in iq_strs: 
+        lf = linear_function(iq_str)
+        lf.solve_raw_input()
+        lf.plot(X)
+        
     plt.grid()
     plt.gca().set_aspect("equal")
     plt.legend(loc="upper left")
     plt.show()
-
-
+    
+    """
+    1*x1+4*x2 <= 20
+    1*x1+0*x2 <= 4
+    1*x1-2*x2 <= -2
+    """
     
     
 
@@ -101,3 +106,4 @@ def main():
     
 if __name__ == "__main__":
     main()
+    
