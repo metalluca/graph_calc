@@ -37,6 +37,7 @@ class linear_function():
         else: # if empty the constraint is either larger or smaller than x
             self.kind = "vertical"
             self.m = res.args[0].args[1] # the value for x vertical line
+            self.b = 0
     
     def compute_y(self, x: np.array) -> np.array:
         return self.m*x+self.b
@@ -74,30 +75,34 @@ def create_figure(iq_strs: list, zf: str):
     
     X = np.linspace(-100, 100, 100)
     ax_lim = 10
+    lfs = []
     for iq_str in iq_strs: 
         lf = linear_function(iq_str)
+        lfs.append(lf)
         lf.solve_raw_input()
         if lf.b > ax_lim:
             ax_lim = lf.b
-        lf.plot(X)
-        
-    fig = plt.figure(figsize=(10, 10))
-    ax = fig.add_subplot(1, 1, 1)
-    ax.spines['right'].set_color('none')
-    ax.spines['top'].set_color('none')
-    ax.xaxis.set_ticks_position('bottom')
-    ax.yaxis.set_ticks_position('left')
-    ax.spines['left'].set_position('zero')
-    ax.spines['bottom'].set_position('zero')
+                    
     step = int(ax_lim/10)
     ax_range = [ax_lim*-1, ax_lim]
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(1, 1, 1)
+    
+    ax.spines['right'].set_color('none')
+    ax.spines['top'].set_color('none')
+    ax.spines['left'].set_position('zero')
+    ax.spines['bottom'].set_position('zero')
+    ax.xaxis.set_ticks_position('bottom')
+    ax.yaxis.set_ticks_position('left')
     ax_square_ticks = np.arange(ax_lim*-1, ax_lim)
     ax.set_xticks(ax_square_ticks[::step])
     ax.set_yticks(ax_square_ticks[::step])
-    
     ax.set_ylim(ax_range)
     ax.set_xlim(ax_range)
+    
     plot_zf(zf, ax)
+    for lf in lfs:
+        lf.plot(X)
     plt.grid()
     plt.gca().set_aspect("equal")
     # plt.legend(loc="upper left")
@@ -109,9 +114,10 @@ def main():
     # no_iq = int(input("How many constraints do you want to visualize?: "))
     # zf = input("Enter Zielfunktion (e.g. maximize 3x+4y): ")
     zf = "600*x1+2000*x2"
-    iq_strs = ["1*x1+1*x2 <= 60", "2000*x1+1000*x2 <= 100000", "10*x1+20*x2 <= 900" ]
+    # iq_strs = ["1*x1+1*x2 <= 60", "2000*x1+1000*x2 <= 100000", "10*x1+20*x2 <= 900" ]
     # iq_strs = ["1*x1+2*x2 <= 2", "-1*x1-1*x2 <= 0", "-1*x1+2*x2 <= -6" ]
-    # iq_strs = ["1*x1+4*x2 <= 20", "1*x1+0*x2 <= 4", "1*x1-2*x2 <= -2", "-5*x1+2*x2 <= 10"]
+    # ! Following test case with second constraint not working properly
+    iq_strs = ["1*x1+4*x2 <= 20", "1*x1+0*x2 <= 4", "1*x1-2*x2 <= -2", "-5*x1+2*x2 <= 10"]
     # iq_strs = ["1*x1+0*x2 <= 4"]
     
     # iq_strs = []
