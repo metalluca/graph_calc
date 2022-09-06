@@ -33,9 +33,11 @@ class linear_function():
             b = None
             m = None
             lhs, rhs = ieq.args
+            if rhs.is_Integer or rhs.is_Float:
+                return float(rhs), None
             for arg in rhs.args:
                 if arg.is_Integer or arg.is_Float:
-                    b = arg # Intercept
+                    b = float(arg) # Intercept
                 elif arg.is_Mul:
                     for arg in arg.args:
                         if not arg.is_Symbol:
@@ -53,17 +55,9 @@ class linear_function():
             return False
         
         f_res = find_func(solved_ieqs)
-        
-        self.b, self.m = extract_vars(f_res)
-        
-        if c[1].args:
-            self.m = float(c[1].args[0])
-            self.b = float(c[0])
-            self.kind = str(type(res.args[1]))
-        else: # if empty the constraint is either larger or smaller than x
+        self.m, self.b = extract_vars(f_res)
+        if self.b is None:
             self.kind = "vertical"
-            self.m = res.args[0].args[1] # the value for x vertical line
-            self.b = 0
     
     def compute_y(self, x: np.array) -> np.array:
         return self.m*x+self.b
@@ -99,15 +93,16 @@ def plot_zf(zf_expr: str, ax):
 
 def create_figure(iq_strs: list, zf: str):
     
-    X = np.linspace(-100, 100, 100)
     ax_lim = 10
     lfs = []
     for iq_str in iq_strs: 
         lf = linear_function(iq_str)
         lfs.append(lf)
         lf.solve_raw_input()
-        if lf.b > ax_lim:
+        if lf.b is not None and lf.b > ax_lim:
             ax_lim = lf.b
+    
+    X = np.linspace(ax_lim*-1, ax_lim, ax_lim)
                     
     step = int(ax_lim/10)
     ax_range = [ax_lim*-1, ax_lim]
@@ -142,12 +137,13 @@ def main():
     # iq_strs = ["1*x1+1*x2 <= 60", "2000*x1+1000*x2 <= 100000", "10*x1+20*x2 <= 900" ]
     # iq_strs = ["1*x1+2*x2 <= 2", "-1*x1-1*x2 <= 0", "-1*x1+2*x2 <= -6" ]
     # ! Following test case with second constraint not working properly
+    iq_strs = ["1*x1+4*x2 <= 20", "1*x1+0*x2 <= 4", "1*x1-2*x2 <= -2", "-5*x1+2*x2 <= 10"]
+    # iq_strs = ["1*x1+0*x2 <= 4"]
     # iq_strs = ["1*x1+4*x2 <= 20", "1*x1+0*x2 <= 4", "1*x1-2*x2 <= -2", "-5*x1+2*x2 <= 10"]
-    # iq_strs = ["1*x1+4*x2 <= 20", "1*x1+0*x2 <= 4", "1*x1-2*x2 <= -2", "-5*x1+2*x2 <= 10"]
-    iq_strs = ["1*x1+4*x2 <= 20"]
+    # iq_strs = ["1*x1+4*x2 <= 20"]
     # iq_strs = ["0*x1 + 3*x2 <= 180", "1*x1+4*x2 <= 20"]
     # iq_strs = ["0*x1 + 3*x2 <= 180"]
-    
+
     # iq_strs = []
     # for i in range(no_iq):
     #     iq_strs.append(input("Enter Nebenbedingung: "))
