@@ -34,7 +34,9 @@ class linear_function():
             m = None
             lhs, rhs = ieq.args
             if rhs.is_Integer or rhs.is_Float:
+                self.kind = "vertical"
                 return float(rhs), None
+            self.kind = ieq.args
             for arg in rhs.args:
                 if arg.is_Integer or arg.is_Float:
                     b = float(arg) # Intercept
@@ -56,8 +58,6 @@ class linear_function():
         
         f_res = find_func(solved_ieqs)
         self.m, self.b = extract_vars(f_res)
-        if self.b is None:
-            self.kind = "vertical"
     
     def compute_y(self, x: np.array) -> np.array:
         return self.m*x+self.b
