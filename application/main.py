@@ -1,9 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import sympy.core.relational
 from sympy.parsing.sympy_parser import parse_expr
 from sympy.solvers import solve
 from sympy import symbols
 from sympy import Rel
+from sympy import simplify, expand, cancel
 """
 
 TODO: 1. Scale axes automatically to input size
@@ -18,7 +20,7 @@ class linear_function():
     _expr = None
     m = None
     b = None
-    kind = None
+    _eq = None
     
     def __init__(self, string):
         self._expr = string
@@ -34,9 +36,9 @@ class linear_function():
             m = None
             lhs, rhs = ieq.args
             if rhs.is_Integer or rhs.is_Float:
-                self.kind = "vertical"
+                self._eq = "vertical"
                 return float(rhs), None
-            self.kind = ieq.args
+            self._eq = ieq
             for arg in rhs.args:
                 if arg.is_Integer or arg.is_Float:
                     b = float(arg) # Intercept
@@ -63,16 +65,15 @@ class linear_function():
         return self.m*x+self.b
     
     def plot(self, X: np.array):
-        
-        if self.kind == "vertical":
+        if self._eq == "vertical":
             plt.axvline(self.m, color="black", label=f"y <= {self.m}")
             plt.axvspan(self.m, np.max(X), alpha=0.3, color="red", hatch="/", label="forbidden space")
          
         else:
             y = self.compute_y(X)
-            if self.kind == "<class 'sympy.core.relational.GreaterThan'>":
+            if isinstance(self._eq, sympy.core.relational.GreaterThan):
                 y2 = np.min(X) # boundary for filling area: either smaller or greater than function
-            else:
+            elif isinstance(self._eq, sympy.core.relational.LessThan):
                 y2 = np.max(X)
             plt.plot(X, y, label="y <="+str(self.m)+"x+"+str(self.b))
             plt.fill_between(
@@ -126,14 +127,14 @@ def create_figure(iq_strs: list, zf: str):
         lf.plot(X)
     plt.grid()
     plt.gca().set_aspect("equal")
-    # plt.legend(loc="upper left")
+    plt.legend(loc="upper left")
     plt.show()
     
 def main():
     
     print("--- Welcome to the LP Visualizer ---")
     # zf = input("Enter Zielfunktion (e.g. maximize 3x+4y): ")
-    zf = "300*x1+500*x2"
+    zf = "2*x1-1*x2"
     # iq_strs = ["1*x1+1*x2 <= 60", "2000*x1+1000*x2 <= 100000", "10*x1+20*x2 <= 900" ]
     # iq_strs = ["1*x1+2*x2 <= 2", "-1*x1-1*x2 <= 0", "-1*x1+2*x2 <= -6" ]
     # ! Following test case with second constraint not working properly
