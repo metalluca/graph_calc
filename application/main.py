@@ -22,14 +22,40 @@ class linear_function():
     
     def __init__(self, string):
         self._expr = string
-    
+        
     def solve_raw_input(self):
         x1, x2 = symbols('x1 x2')
         lhs, rhs = parse_expr(self._expr).args
         eq = Rel(lhs, rhs, "<=")
-        res = solve(eq, x2)
-        foo = res.args[1].args[1] # stores the actual unequation
-        c = foo.as_coeff_Add() 
+        solved_ieqs = solve(eq, x2)
+        
+        def extract_vars(ieq):
+            b = None
+            m = None
+            lhs, rhs = ieq.args
+            for arg in rhs.args:
+                if arg.is_Integer or arg.is_Float:
+                    b = arg # Intercept
+                elif arg.is_Mul:
+                    for arg in arg.args:
+                        if not arg.is_Symbol:
+                            m = float(arg)
+            return m, b
+        
+        def find_func(solved_ieqs):
+            for iq in solved_ieqs.args:
+                if not contains_infinite(iq):
+                    return iq
+        def contains_infinite(x):
+            for arg in x.args:
+                if arg.is_infinite:
+                    return True
+            return False
+        
+        f_res = find_func(solved_ieqs)
+        
+        self.b, self.m = extract_vars(f_res)
+        
         if c[1].args:
             self.m = float(c[1].args[0])
             self.b = float(c[0])
@@ -111,14 +137,16 @@ def create_figure(iq_strs: list, zf: str):
 def main():
     
     print("--- Welcome to the LP Visualizer ---")
-    # no_iq = int(input("How many constraints do you want to visualize?: "))
     # zf = input("Enter Zielfunktion (e.g. maximize 3x+4y): ")
-    zf = "600*x1+2000*x2"
+    zf = "300*x1+500*x2"
     # iq_strs = ["1*x1+1*x2 <= 60", "2000*x1+1000*x2 <= 100000", "10*x1+20*x2 <= 900" ]
     # iq_strs = ["1*x1+2*x2 <= 2", "-1*x1-1*x2 <= 0", "-1*x1+2*x2 <= -6" ]
     # ! Following test case with second constraint not working properly
-    iq_strs = ["1*x1+4*x2 <= 20", "1*x1+0*x2 <= 4", "1*x1-2*x2 <= -2", "-5*x1+2*x2 <= 10"]
-    # iq_strs = ["1*x1+0*x2 <= 4"]
+    # iq_strs = ["1*x1+4*x2 <= 20", "1*x1+0*x2 <= 4", "1*x1-2*x2 <= -2", "-5*x1+2*x2 <= 10"]
+    # iq_strs = ["1*x1+4*x2 <= 20", "1*x1+0*x2 <= 4", "1*x1-2*x2 <= -2", "-5*x1+2*x2 <= 10"]
+    iq_strs = ["1*x1+4*x2 <= 20"]
+    # iq_strs = ["0*x1 + 3*x2 <= 180", "1*x1+4*x2 <= 20"]
+    # iq_strs = ["0*x1 + 3*x2 <= 180"]
     
     # iq_strs = []
     # for i in range(no_iq):
